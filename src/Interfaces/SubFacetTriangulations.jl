@@ -48,6 +48,10 @@ function _setup_facet_ref_map(st,reffe,facet_types)
   facet_to_ref_map
 end
 
+function compress(cell_mat,trian::SubFacetTriangulation)
+  compress(cell_mat,get_cell_to_bgcell(trian))
+end
+
 # Triangulation API
 
 get_node_coordinates(trian::SubFacetTriangulation) = trian.subfacets.point_to_coords
@@ -137,4 +141,3 @@ function Base.append!(a::SubFacetData{D},b::SubFacetData{D}) where D
 
   a
 end
-

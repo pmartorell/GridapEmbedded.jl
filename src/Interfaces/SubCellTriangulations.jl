@@ -43,6 +43,10 @@ function _setup_cell_ref_map(st,reffe,cell_types)
   cell_to_ref_map
 end
 
+function compress(cell_mat,trian::SubCellTriangulation)
+  compress(cell_mat,get_cell_to_bgcell(trian))
+end
+
 # Triangulation API
 
 get_node_coordinates(trian::SubCellTriangulation) = trian.subcells.point_to_coords
@@ -81,4 +85,3 @@ function Visualization.visualization_data(st::SubCellData,filename::String;celld
   end
   (Visualization.VisualizationData(ug,filename,celldata=_celldata),)
 end
-
