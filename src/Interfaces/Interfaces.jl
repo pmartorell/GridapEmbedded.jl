@@ -23,6 +23,7 @@ import Gridap.Geometry: TriangulationStyle
 import Gridap.Geometry: get_background_triangulation
 import Gridap.Geometry: get_cell_ref_map
 import Gridap.Geometry: get_facet_normal
+import Gridap.Geometry: compress
 
 using GridapEmbedded.CSG
 
