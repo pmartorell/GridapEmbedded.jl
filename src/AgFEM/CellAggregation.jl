@@ -47,6 +47,14 @@ end
 function aggregate(
   strategy,
   cut::EmbeddedDiscretization,
+  facet_to_inoutcut::AbstractVector)
+
+  aggregate(strategy,cut,cut.geo,IN,facet_to_inoutcut)
+end
+
+function aggregate(
+  strategy,
+  cut::EmbeddedDiscretization,
   cut_facets::EmbeddedFacetDiscretization,
   geo::CSG.Geometry,
   in_or_out)
@@ -83,6 +91,16 @@ function aggregate(
   _aggregate_by_threshold(strategy.threshold,cut,geo,in_or_out,facet_to_inoutcut)
 end
 
+function aggregate(
+  strategy::AggregateCutCellsByThreshold,
+  cut::EmbeddedDiscretization,
+  geo::CSG.Geometry,
+  in_or_out,
+  facet_to_inoutcut::AbstractVector)
+
+  _aggregate_by_threshold(strategy.threshold,cut,geo,in_or_out,facet_to_inoutcut)
+end
+
 function _aggregate_by_threshold(threshold,cut,geo,loc,facet_to_inoutcut)
   @assert loc in (IN,OUT)
 
@@ -94,6 +112,8 @@ function _aggregate_by_threshold(threshold,cut,geo,loc,facet_to_inoutcut)
   cell_to_meas = get_cell_measure(bgtrian)
   cell_to_unit_cut_meas = lazy_map(/,cell_to_cut_meas,cell_to_meas)
 
+  cell_to_inoutcut = compute_bgcell_to_inoutcut(cut,geo)
+
   cell_to_coords = get_cell_coordinates(bgtrian)
   topo = get_grid_topology(model)
   D = num_cell_dims(model)
@@ -101,12 +121,12 @@ function _aggregate_by_threshold(threshold,cut,geo,loc,facet_to_inoutcut)
   face_to_cells = get_faces(topo,D-1,D)
 
   _aggregate_by_threshold_barrier(
-    threshold,cell_to_unit_cut_meas,facet_to_inoutcut,
+    threshold,cell_to_unit_cut_meas,facet_to_inoutcut,cell_to_inoutcut,
     loc,cell_to_coords,cell_to_faces,face_to_cells)
 end
 
 function _aggregate_by_threshold_barrier(
-  threshold,cell_to_unit_cut_meas,facet_to_inoutcut,
+  threshold,cell_to_unit_cut_meas,facet_to_inoutcut,cell_to_inoutcut,
   loc,cell_to_coords,cell_to_faces,face_to_cells)
 
   n_cells = length(cell_to_unit_cut_meas)
@@ -131,7 +151,7 @@ function _aggregate_by_threshold_barrier(
   for iter in 1:max_iters
     all_aggregated = true
     for cell in 1:n_cells
-      if 0 < cell_to_unit_cut_meas[cell] < threshold && ! cell_to_touched[cell]
+      if ! cell_to_touched[cell] && cell_to_inoutcut[cell] == CUT
         neigh_cell = _find_best_neighbor(
           c1,c2,c3,c4,cell,
           cell_to_faces,
