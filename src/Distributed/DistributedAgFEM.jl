@@ -327,6 +327,29 @@ function merge_nodes(model::DiscreteModel,ids)
   UnstructuredDiscreteModel(grid)
 end
 
+function unique_reffe(grid::UnstructuredGrid)
+  coords = get_node_coordinates(grid)
+  conn = get_cell_node_ids(grid)
+  reffes = get_reffes(grid)
+  @assert all(==(reffes[1]),reffes)
+  ctypes = ones(Int8,length(conn))
+  reffes = [reffes[1]]
+  UnstructuredGrid(coords,conn,reffes,ctypes)
+end
+
+function unique_reffe(model::UnstructuredDiscreteModel)
+  grid = get_grid(model)
+  grid = unique_reffe(grid)
+  UnstructuredDiscreteModel(grid)
+end
+
+function unique_reffe(model::DistributedDiscreteModel)
+  models = map(local_views(model)) do m
+    unique_reffe(m)
+  end
+  DistributedDiscreteModel(models,get_cell_gids(model))
+end
+
 function add_remote_cells(model::DistributedDiscreteModel,remote_cells,remote_parts)
   # Send remote gids to owners
   snd_ids = remote_parts
@@ -372,7 +395,7 @@ function add_remote_cells(model::DistributedDiscreteModel,remote_cells,remote_pa
   # Build appended model
   lgrids = map(get_grid,local_views(model))
   _grids = map(lazy_append,lgrids,rgrids)
-  _models = map(UnstructuredDiscreteModel,_grids)
+  _models = map(unique_reffe ∘ UnstructuredDiscreteModel,_grids)
   agids = add_remote_ids(gids,remote_cells,remote_parts)
   amodel = DistributedDiscreteModel(_models,agids) |> merge_nodes
 

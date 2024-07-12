@@ -39,6 +39,19 @@ function cut_facets(bgmodel::DistributedDiscreteModel,args...)
   cut_facets(LevelSetCutter(),bgmodel,args...)
 end
 
+function cut_facets(
+  cut::DistributedEmbeddedDiscretization{<:AbstractArray{<:EmbeddedDiscretization{D}}},
+  args...) where D
+
+  cuts = map(local_views(cut)) do cut
+    cut_facets(cut,args...)
+  end
+  bgmodel = get_background_model(cut)
+  facet_gids = get_face_gids(bgmodel,D-1)
+  consistent_bgfacet_to_inoutcut!(cuts,facet_gids)
+  DistributedEmbeddedDiscretization(cuts,bgmodel)
+end
+
 function cut_facets(cutter::Cutter,bgmodel::DistributedDiscreteModel,args...)
   D = map(num_dims,local_views(bgmodel)) |> PartitionedArrays.getany
   cell_gids = get_cell_gids(bgmodel)

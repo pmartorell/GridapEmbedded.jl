@@ -25,6 +25,7 @@ using GridapEmbedded.Interfaces: AbstractEmbeddedDiscretization
 using GridapEmbedded.AgFEM: _touch_aggregated_cells!
 using GridapEmbedded.AgFEM: AggregateCutCellsByThreshold
 using GridapEmbedded.MomentFittedQuadratures: MomentFitted
+using GridapEmbedded.MomentFittedQuadratures: momentfitted
 using Gridap.Geometry: AppendedTriangulation
 using Gridap.Geometry: get_face_to_parent_face
 using Gridap.FESpaces: FESpaceWithLinearConstraints
